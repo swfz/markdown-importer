@@ -42,7 +42,7 @@ const mergeDailyNote = async (directory, properties) => {
   const ast = markdownToAst(obsidianDailyNoteFilename);
 
   const habitsAst = createListAst(habits, (row) => `[${row.value ? "x" : " "}] ${row.name}`);
-  const habitsHeadingAst = createHabitsHeadingAst("Habits", 2);
+  const habitsHeadingAst = createHeadingAst("Habits", 2);
 
   const existHabits = ast.children.find(
     (item) => item.type === "heading" && item.children[0]?.value === "Habits",
