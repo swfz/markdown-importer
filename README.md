@@ -4,7 +4,7 @@
 
 基本的に使いきり
 
-## notion-habits2daily_note.js
+## notion_habits2daily_note.js
 
 Notionに日毎で習慣化のプロパティが存在するページがあり、それを集約したDatabaseがある
 
@@ -42,11 +42,11 @@ node habits.js /path/to/obsidian/daily_note
 - 過去データの入れ込みで一度きりの実行を想定しているため冪等性などは考慮していない
 
 
-## notion-journal2daily.js
+## notion_journal2daily_note.js
 - 予定
 
-## notion-journal2weekly.js
+## notion_journal2weekly_note.js
 - 予定
 
-## notion-journal2monthly.js
+## notion_journal2monthly_note.js
 - 予定
