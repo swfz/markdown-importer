@@ -1,7 +1,7 @@
 import { Client, LogLevel } from "@notionhq/client";
 import * as fs from "fs";
 
-import { markdownToAst, astToMarkdown, createListAst, createHeadingAst } from "./util.js";
+import { markdownToAst, astToMarkdown, createListAst, createHeadingAst } from "./lib/util.js";
 
 const getHabitsFromPage = async (notion, page) => {
   const pageId = page.id;
