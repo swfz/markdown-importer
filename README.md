@@ -40,3 +40,13 @@ node habits.js /path/to/obsidian/daily_note
 - ファイル内に`Memo`というヘッダーがない場合
     - ファイルの末尾に追加する
 - 過去データの入れ込みで一度きりの実行を想定しているため冪等性などは考慮していない
+
+
+## notion-journal2daily.js
+- 予定
+
+## notion-journal2weekly.js
+- 予定
+
+## notion-journal2monthly.js
+- 予定
