@@ -88,15 +88,13 @@ const mergeDailyNote = (directory, row) =>{
   }
   const ast = markdownToAst(obsidianDailyNoteFilename);
 
-// 現存するファイルに関しては全て末尾に`tags: #daily/2022/03` がある
+  // 現存するファイルに関しては全て末尾に`tags: #daily/2022/03` がある
   const targetHeaderIndex = ast.children.findIndex(
     (node) => node.type === "paragraph" && node.children[0]?.value.match('tags: #daily')
   );
 
   // 何かしら1つあれば1度実行したと判断
-  if (ast.children.findIndex(
-    (node) => node.type === "heading" && node.children[0]?.value === 'Y'
-  ) !== -1){
+  if (ast.children.findIndex(node => node.type === "heading" && node.children[0]?.value === 'Y') !== -1){
     console.warn("already merged");
     return;
   }
@@ -121,7 +119,6 @@ const mergeDailyNote = (directory, row) =>{
   ];
 
   const frontmatterIndex = mergedContentsChildren.findIndex(node => node.type === "yaml");
-
   const metadata = frontmatterIndex === -1 ? {} : yaml.load(mergedContentsChildren[frontmatterIndex].value);
 
   const frontmatter = [
@@ -174,13 +171,13 @@ const main = async () => {
         {
           property: "Date",
           date: {
-            on_or_after: "2022-08-21",
+            on_or_after: "2022-08-22",
           }
         },
         {
           property: "Date",
           date: {
-            on_or_before: "2022-08-22"
+            on_or_before: "2022-08-24"
           }
         }
       ]
@@ -191,7 +188,6 @@ const main = async () => {
 
   pages.forEach(page => {
     const row = getProperties(page);
-    console.log(row);
     mergeDailyNote(obsidianDailyNoteDir, row);
   });
 };

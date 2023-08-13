@@ -109,7 +109,8 @@ fuga\n
 `;
 
 const nestedStructure = parseString(strInput);
-console.log(JSON.stringify(nestedStructure, null, 2));
+// console.log(JSON.stringify(nestedStructure, null, 2));
+console.dir(nestedStructure, {depth: null})
 
 
 // ```[

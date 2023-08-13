@@ -43,7 +43,26 @@ node habits.js /path/to/obsidian/daily_note
 
 
 ## notion_journal2daily_note.js
-- 予定
+
+NotionのJournalデータを記録しているDatabaseがある
+
+そのデータをObsidianのDailyNoteに追加する
+
+### 使い方
+- 環境変数`NOTION_DATABASE_ID` にDatabaseIDを設定
+- 環境変数`NOTION_TOKEN` にAPI Tokenを設定
+- 実行
+    - DailyNoteが存在するディレクトリはコマンドライン引数で渡す
+
+```
+node notion_journal2daily_noet.js /path/to/obsidia/daily_note/2023-08-01.md
+```
+### 他
+- ObsidianのDailyNoteはYYYY-MM-DD.mdというファイル名で存在する
+- ファイル内に`tag: #daily/2022/08`のようなparagraphがある場合
+    - Nodeの前に各項目のリストを入れ込む
+    - 存在しない場合、ファイルの末尾に各項目のリストを追加する
+- 過去データの入れ込みで一度きりの実行を想定しているため冪等性などは考慮していない
 
 ## notion_journal2weekly_note.js
 - 予定
