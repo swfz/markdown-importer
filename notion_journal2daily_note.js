@@ -5,44 +5,87 @@ import { markdownToAst, astToMarkdown, createListAst, createHeadingAst } from ".
 
 const keyMap = {
   "📗Y": "Y",
+  "📘W": "W",
+  "📕T": "T",
+  "買ったもの": "buy",
+  "会議": "meeting",
+  "ファシリ": "facilitate",
+  "topic": "Topic",
+  "コーヒー": "coffee",
+  "FB用メモ": "FeedbackMemo",
+  "Bad": "Bad",
+  "Good": "Good",
 }
 
-const getProperties = async (page) => {
-  console.dir(page, { depth: null });
-  const entries = Object.entries(page.properties);
-  // console.log(entries);
+const richTextExtractor = (value) => {
+  return value[0]?.plain_text || "";
+}
+
+const selectExtractor = (value) => {
+  console.dir(value, { depth: null })
+  return value.name;
+}
+
+const numberExtractor = (value) => {
+  return value;
+}
+
+const dateExtractor = (value) => {
+  return value.start;
+}
+
+const valueMap = {
+  type: selectExtractor,
+  score: numberExtractor,
+  from: selectExtractor,
+  buy: richTextExtractor,
+  Bad: richTextExtractor,
+  Good: richTextExtractor,
+  Y: richTextExtractor,
+  W: richTextExtractor,
+  T: richTextExtractor,
+  meeting: numberExtractor,
+  facilitate: numberExtractor,
+  Topic: richTextExtractor,
+  coffee: numberExtractor,
+  FeedbackMemo: richTextExtractor,
+  date: dateExtractor,
+  topic: richTextExtractor,
+  lunch: richTextExtractor,
+  name: (title) => title[0].plain_text,
+}
+
+const getProperties = (page) => {
   const keys = Object.keys(page.properties);
 
-  // console.log(keys);
-  const properties = keys.map((key) => {
+  const properties = keys.reduce((acc, key) => {
     const property = page.properties[key];
     const propType = property.type;
 
     if (["relation", "formula"].includes(propType)) {
-      return null;
+      return acc;
     }
 
-// console.log(property);
-// console.log(propType);
-// console.log(property[propType]);
+    const name = keyMap[key] || key.toLowerCase()
 
-    return {
-      name: key,
-      value: property[propType],
-    };
-  })
-  .filter((p) => p);
+    return {...acc, ...{[name]: valueMap[name](property[propType])}}
+  }, {})
 
   return properties;
 };
 
-// nestしたリストの作成
-// a
-// → b
-// みたいなことやってるのでこれをリスト化する
-// 項目のマップ
-// 絵文字+Y -> Y
-// FB用メモ
+const mergeDailyNote = (directory, row) =>{
+  const obsidianDailyNoteFilename = `${directory}/${row.date}.md`;
+
+  const existMarkdown = fs.existsSync(obsidianDailyNoteFilename);
+  if (!existMarkdown) {
+    fs.writeFileSync(obsidianDailyNoteFilename, "");
+  }
+  const ast = markdownToAst(obsidianDailyNoteFilename);
+
+
+
+}
 
 const main = async () => {
   const args = process.argv.slice(2);
@@ -68,7 +111,7 @@ const main = async () => {
         {
           property: "Date",
           date: {
-            on_or_before: "2022-02-08"
+            on_or_before: "2022-02-02"
           }
         }
       ]
@@ -78,14 +121,11 @@ const main = async () => {
   const pages = response.results;
   // console.dir(pages, { depth: null });
 
-  console.log(pages.map(p => p.properties.Name.title[0]?.plain_text));
-
-  // ==== 1件で試す
-  // const properties = await getProperties(pages[0]);
-  // console.dir(properties, { depth: null });
-  // await mergeDailyNote(obsidianDailyNoteDir, properties);
-  // ==== 1件で試す
-
+  pages.forEach(page => {
+    const row = getProperties(page);
+    console.log(row);
+    mergeDailyNote(obsidianDailyNoteDir, row);
+  });
 };
 
 main();
