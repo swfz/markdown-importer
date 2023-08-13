@@ -5,8 +5,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear.js';
 dayjs.extend(weekOfYear);
 
 import * as fs from "fs";
-import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createListAst, createHeadingAst, removePositionFromAst} from "./lib/util.js";
-import { log } from "console";
+import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst, removePositionFromAst} from "./lib/util.js";
 
 // 範囲: 2021-10-27 - 2022-12-30
 
@@ -34,7 +33,7 @@ const selectExtractor = (value) => {
 }
 
 const numberExtractor = (value) => {
-  return value;
+  return value || 0;
 }
 
 const dateExtractor = (value) => {
@@ -73,21 +72,12 @@ const getProperties = (page) => {
     }
 
     const name = keyMap[key] || key.toLowerCase()
-    console.log(property);
-    console.log(name);
 
     return {...acc, ...{[name]: valueMap[name](property[propType])}}
   }, {})
 
   return properties;
 };
-
-// 現存するファイルに関しては全て末尾に`tags: #daily/2022/03` がある
-// frontmatterが無い場合は先頭に追加
-
-const countTab = (text) => {
-  return text.match(/→/g)?.length || 0;
-}
 
 const mergeDailyNote = (directory, row) =>{
   const obsidianDailyNoteFilename = `${directory}/${row.date}.md`;
@@ -98,9 +88,18 @@ const mergeDailyNote = (directory, row) =>{
   }
   const ast = markdownToAst(obsidianDailyNoteFilename);
 
+// 現存するファイルに関しては全て末尾に`tags: #daily/2022/03` がある
   const targetHeaderIndex = ast.children.findIndex(
     (node) => node.type === "paragraph" && node.children[0]?.value.match('tags: #daily')
   );
+
+  // 何かしら1つあれば1度実行したと判断
+  if (ast.children.findIndex(
+    (node) => node.type === "heading" && node.children[0]?.value === 'Y'
+  ) !== -1){
+    console.warn("already merged");
+    return;
+  }
 
   const contentsAstList = ["Y", "W", "T", "Good", "Bad", "FeedbackMemo", "Topic"].map(key => {
     if (!row[key]) {
@@ -112,20 +111,7 @@ const mergeDailyNote = (directory, row) =>{
     return [createHeadingAst(key, 2), createRecursiveListAst(lines)]
   }).flat();
 
-  // console.log(contentsAstList);
-
-  const frontmatter = [
-    "date", "type", "from", "title", "lunch", "score", "coffee", "facilitate", "meeting", "buy"
-  ].reduce((acc, key) => {
-    acc[key] = row[key];
-    return acc;
-  }, {
-    week: `${dayjs(row.date).year()}-W${dayjs(row.date).week().toString().padStart(2, '0')}`,
-    month: `${dayjs(row.date).format("YYYY-MM")}`,
-  });
-
-  // console.log(frontmatter);
-  const children = targetHeaderIndex === -1 ? [
+  const mergedContentsChildren = targetHeaderIndex === -1 ? [
     ...ast.children,
     ...contentsAstList
   ] : [
@@ -134,8 +120,37 @@ const mergeDailyNote = (directory, row) =>{
     ...ast.children.slice(targetHeaderIndex),
   ];
 
-  const afterAst = { ...ast, ...{children}};
-  // console.dir(removePositionFromAst(ast), {depth: null})
+  const frontmatterIndex = mergedContentsChildren.findIndex(node => node.type === "yaml");
+
+  const metadata = frontmatterIndex === -1 ? {} : yaml.load(mergedContentsChildren[frontmatterIndex].value);
+
+  const frontmatter = [
+    "date", "type", "from", "title", "lunch", "score", "coffee", "facilitate", "meeting", "buy"
+  ].reduce((acc, key) => {
+    acc[key] = row[key];
+    return acc;
+  }, {
+    ...metadata,
+    week: `${dayjs(row.date).year()}-W${dayjs(row.date).week().toString().padStart(2, '0')}`,
+    month: `${dayjs(row.date).format("YYYY-MM")}`,
+  });
+
+  const frontmatterAst = {
+    type: "yaml",
+    value: yaml.dump(frontmatter),
+  }
+
+  // frontmatterが無い場合は先頭に追加
+  const children = frontmatterIndex === -1 ? [
+    frontmatterAst,
+    ...mergedContentsChildren,
+  ] : [
+    ...mergedContentsChildren.slice(0, frontmatterIndex),
+    frontmatterAst,
+    ...mergedContentsChildren.slice(frontmatterIndex + 1),
+  ];
+
+  const afterAst = { ...ast, ...{ children }};
   // console.dir(removePositionFromAst(afterAst), {depth: null});
 
   astToMarkdown(obsidianDailyNoteFilename, afterAst);
@@ -159,13 +174,13 @@ const main = async () => {
         {
           property: "Date",
           date: {
-            on_or_after: "2022-02-20",
+            on_or_after: "2022-08-21",
           }
         },
         {
           property: "Date",
           date: {
-            on_or_before: "2022-02-21"
+            on_or_before: "2022-08-22"
           }
         }
       ]
@@ -173,7 +188,6 @@ const main = async () => {
   });
 
   const pages = response.results;
-  // console.dir(pages, { depth: null });
 
   pages.forEach(page => {
     const row = getProperties(page);
