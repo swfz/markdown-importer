@@ -44,7 +44,7 @@ const valueMap = {
   date: dateExtractor,
   type: selectExtractor,
   from: selectExtractor,
-  title: (title) => title[0].plain_text,
+  title: (title) => title[0]?.plain_text,
   lunch: richTextExtractor,
   score: numberExtractor,
   coffee: numberExtractor,
@@ -81,6 +81,7 @@ const getProperties = (page) => {
 
 const mergeDailyNote = (directory, row) =>{
   const obsidianDailyNoteFilename = `${directory}/${row.date}.md`;
+  console.log(row);
 
   const existMarkdown = fs.existsSync(obsidianDailyNoteFilename);
   if (!existMarkdown) {
@@ -90,7 +91,7 @@ const mergeDailyNote = (directory, row) =>{
 
   // 現存するファイルに関しては全て末尾に`tags: #daily/2022/03` がある
   const targetHeaderIndex = ast.children.findIndex(
-    (node) => node.type === "paragraph" && node.children[0]?.value.match('tags: #daily')
+    (node) => node.type === "paragraph" && node.children[0]?.value?.match('tags: #daily')
   );
 
   // 何かしら1つあれば1度実行したと判断
@@ -132,6 +133,8 @@ const mergeDailyNote = (directory, row) =>{
     month: `${dayjs(row.date).format("YYYY-MM")}`,
   });
 
+  console.log(frontmatter);
+
   const frontmatterAst = {
     type: "yaml",
     value: yaml.dump(frontmatter),
@@ -171,13 +174,13 @@ const main = async () => {
         {
           property: "Date",
           date: {
-            on_or_after: "2022-08-22",
+            on_or_after: "2022-12-01",
           }
         },
         {
           property: "Date",
           date: {
-            on_or_before: "2022-08-24"
+            on_or_before: "2022-12-31"
           }
         }
       ]
