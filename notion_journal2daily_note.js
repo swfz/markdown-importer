@@ -1,7 +1,13 @@
 import { Client, LogLevel } from "@notionhq/client";
-import * as fs from "fs";
+import yaml from 'js-yaml';
+import dayjs from 'dayjs';
+import weekOfYear from 'dayjs/plugin/weekOfYear.js';
+dayjs.extend(weekOfYear);
 
-import { markdownToAst, astToMarkdown, createListAst, createHeadingAst } from "./lib/util.js";
+import * as fs from "fs";
+import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createListAst, createHeadingAst, removePositionFromAst} from "./lib/util.js";
+
+// 範囲: 2021-10-27 - 2022-12-30
 
 const keyMap = {
   "📗Y": "Y",
@@ -15,6 +21,7 @@ const keyMap = {
   "FB用メモ": "FeedbackMemo",
   "Bad": "Bad",
   "Good": "Good",
+  "Name": "title"
 }
 
 const richTextExtractor = (value) => {
@@ -35,24 +42,23 @@ const dateExtractor = (value) => {
 }
 
 const valueMap = {
+  date: dateExtractor,
   type: selectExtractor,
-  score: numberExtractor,
   from: selectExtractor,
+  title: (title) => title[0].plain_text,
+  lunch: richTextExtractor,
+  score: numberExtractor,
+  coffee: numberExtractor,
+  facilitate: numberExtractor,
+  meeting: numberExtractor,
   buy: richTextExtractor,
-  Bad: richTextExtractor,
-  Good: richTextExtractor,
   Y: richTextExtractor,
   W: richTextExtractor,
   T: richTextExtractor,
-  meeting: numberExtractor,
-  facilitate: numberExtractor,
-  Topic: richTextExtractor,
-  coffee: numberExtractor,
+  Good: richTextExtractor,
+  Bad: richTextExtractor,
   FeedbackMemo: richTextExtractor,
-  date: dateExtractor,
   topic: richTextExtractor,
-  lunch: richTextExtractor,
-  name: (title) => title[0].plain_text,
 }
 
 const getProperties = (page) => {
@@ -68,11 +74,19 @@ const getProperties = (page) => {
 
     const name = keyMap[key] || key.toLowerCase()
 
+    console.log(name);
     return {...acc, ...{[name]: valueMap[name](property[propType])}}
   }, {})
 
   return properties;
 };
+
+// 現存するファイルに関しては全て末尾に`tags: #daily/2022/03` がある
+// frontmatterが無い場合は先頭に追加
+
+const countTab = (text) => {
+  return text.match(/→/g)?.length || 0;
+}
 
 const mergeDailyNote = (directory, row) =>{
   const obsidianDailyNoteFilename = `${directory}/${row.date}.md`;
@@ -83,8 +97,47 @@ const mergeDailyNote = (directory, row) =>{
   }
   const ast = markdownToAst(obsidianDailyNoteFilename);
 
+  const targetHeaderIndex = ast.children.findIndex(
+    (node) => node.type === "paragraph" && node.children[0]?.value.match('tags: #daily')
+  );
 
+  // const contentsAstList = ["Y", "W", "T", "Good", "Bad", "FeedbackMemo", "Topic"].map(key => {
+  const contentsAstList = ["FeedbackMemo", "Topic"].map(key => {
+    if (!row[key]) {
+      return [createHeadingAst(key, 2)];
+    }
 
+    const lines = parseString(row[key]);
+
+    return [createHeadingAst(key, 2), createRecursiveListAst(lines)]
+  }).flat();
+
+  console.log(contentsAstList);
+
+  const frontmatter = [
+    "date", "type", "from", "title", "lunch", "score", "coffee", "facilitate", "meeting", "buy"
+  ].reduce((acc, key) => {
+    acc[key] = row[key];
+    return acc;
+  }, {
+    week: `${dayjs(row.date).year()}-W${dayjs(row.date).week().toString().padStart(2, '0')}`,
+    month: `${dayjs(row.date).format("YYYY-MM")}`,
+  });
+
+  // console.log(frontmatter);
+  const children = targetHeaderIndex === -1 ? [
+    ...ast.children,
+    ...contentsAstList
+  ] : [
+    ...ast.children.slice(0, targetHeaderIndex),
+    ...contentsAstList,
+    ...ast.children.slice(targetHeaderIndex),
+  ];
+
+  const afterAst = { ...ast, ...{children}};
+  console.dir(removePositionFromAst(afterAst), {depth: null});
+
+  astToMarkdown(obsidianDailyNoteFilename, afterAst);
 }
 
 const main = async () => {
@@ -105,13 +158,13 @@ const main = async () => {
         {
           property: "Date",
           date: {
-            on_or_after: "2022-02-01",
+            on_or_after: "2022-12-20",
           }
         },
         {
           property: "Date",
           date: {
-            on_or_before: "2022-02-02"
+            on_or_before: "2022-12-21"
           }
         }
       ]
