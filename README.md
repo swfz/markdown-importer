@@ -29,7 +29,7 @@ Databaseに存在する各日にちの習慣化リストを取得しObsidianのD
     - DailyNoteが存在するディレクトリはコマンドライン引数で渡す
 
 ```
-node habits.js /path/to/obsidian/daily_note
+node notion_habits2daily_note.js /path/to/obsidian/daily_note
 ```
 
 ### 他
@@ -55,7 +55,7 @@ NotionのJournalデータを記録しているDatabaseがある
     - DailyNoteが存在するディレクトリはコマンドライン引数で渡す
 
 ```
-node notion_journal2daily_noet.js /path/to/obsidia/daily_note/2023-08-01.md
+node notion_journal2daily_noet.js /path/to/obsidia/daily_note
 ```
 ### 他
 - ObsidianのDailyNoteはYYYY-MM-DD.mdというファイル名で存在する
