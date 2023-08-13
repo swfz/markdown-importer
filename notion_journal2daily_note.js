@@ -6,6 +6,7 @@ dayjs.extend(weekOfYear);
 
 import * as fs from "fs";
 import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createListAst, createHeadingAst, removePositionFromAst} from "./lib/util.js";
+import { log } from "console";
 
 // 範囲: 2021-10-27 - 2022-12-30
 
@@ -29,8 +30,7 @@ const richTextExtractor = (value) => {
 }
 
 const selectExtractor = (value) => {
-  console.dir(value, { depth: null })
-  return value.name;
+  return value?.name || "";
 }
 
 const numberExtractor = (value) => {
@@ -73,8 +73,9 @@ const getProperties = (page) => {
     }
 
     const name = keyMap[key] || key.toLowerCase()
-
+    console.log(property);
     console.log(name);
+
     return {...acc, ...{[name]: valueMap[name](property[propType])}}
   }, {})
 
@@ -101,8 +102,7 @@ const mergeDailyNote = (directory, row) =>{
     (node) => node.type === "paragraph" && node.children[0]?.value.match('tags: #daily')
   );
 
-  // const contentsAstList = ["Y", "W", "T", "Good", "Bad", "FeedbackMemo", "Topic"].map(key => {
-  const contentsAstList = ["FeedbackMemo", "Topic"].map(key => {
+  const contentsAstList = ["Y", "W", "T", "Good", "Bad", "FeedbackMemo", "Topic"].map(key => {
     if (!row[key]) {
       return [createHeadingAst(key, 2)];
     }
@@ -112,7 +112,7 @@ const mergeDailyNote = (directory, row) =>{
     return [createHeadingAst(key, 2), createRecursiveListAst(lines)]
   }).flat();
 
-  console.log(contentsAstList);
+  // console.log(contentsAstList);
 
   const frontmatter = [
     "date", "type", "from", "title", "lunch", "score", "coffee", "facilitate", "meeting", "buy"
@@ -135,7 +135,8 @@ const mergeDailyNote = (directory, row) =>{
   ];
 
   const afterAst = { ...ast, ...{children}};
-  console.dir(removePositionFromAst(afterAst), {depth: null});
+  // console.dir(removePositionFromAst(ast), {depth: null})
+  // console.dir(removePositionFromAst(afterAst), {depth: null});
 
   astToMarkdown(obsidianDailyNoteFilename, afterAst);
 }
@@ -158,13 +159,13 @@ const main = async () => {
         {
           property: "Date",
           date: {
-            on_or_after: "2022-12-20",
+            on_or_after: "2022-02-20",
           }
         },
         {
           property: "Date",
           date: {
-            on_or_before: "2022-12-21"
+            on_or_before: "2022-02-21"
           }
         }
       ]
