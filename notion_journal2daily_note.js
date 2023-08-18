@@ -120,7 +120,7 @@ const mergeDailyNote = (directory, row) =>{
   ];
 
   const frontmatterIndex = mergedContentsChildren.findIndex(node => node.type === "yaml");
-  const metadata = frontmatterIndex === -1 ? {} : yaml.load(mergedContentsChildren[frontmatterIndex].value);
+  const metadata = frontmatterIndex === -1 ? {} : yaml.load(mergedContentsChildren[frontmatterIndex].value, {schema: yaml.JSON_SCHEMA});
 
   const frontmatter = [
     "date", "type", "from", "title", "lunch", "score", "coffee", "facilitate", "meeting", "buy"
@@ -137,7 +137,12 @@ const mergeDailyNote = (directory, row) =>{
 
   const frontmatterAst = {
     type: "yaml",
-    value: yaml.dump(frontmatter),
+    value: yaml.dump(frontmatter, {
+      schema: yaml.JSON_SCHEMA,
+      styles: {
+        '!!null': 'empty'
+      },
+    }),
   }
 
   // frontmatterが無い場合は先頭に追加
