@@ -5,7 +5,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear.js';
 dayjs.extend(weekOfYear);
 
 import * as fs from "fs";
-import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst, formatFeedbackMemo} from "./lib/util.js";
+import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst } from "./lib/util.js";
 
 // 範囲: 2021-10-27 - 2022-12-30
 
@@ -78,6 +78,38 @@ const getProperties = (page) => {
 
   return properties;
 };
+
+const formatFeedbackMemo = (str) => {
+  const getFeedbackText = (lines, index, stack = []) => {
+    const line = lines[index];
+
+    if (line === undefined) {
+      return stack.join();
+    }
+
+    if (line.match("🟢") || line.match("🔴")) {
+      return stack.join();
+    }
+    else {
+      stack.push(line.replace("→", "").trim());
+      return getFeedbackText(lines, index + 1, stack);
+    }
+  }
+
+  const lines = str.split("\n");
+  const listByName = lines.reduce((acc, line, index) => {
+    if (line.match("🟢") || line.match("🔴"))  {
+      const name = line.replace("🟢", "").replace("🔴", "").trim();
+      const label = line.match("🟢") ? "posi" : "nega";
+      const text = getFeedbackText(lines, index + 1);
+      acc[name] = {name, text, label};
+    }
+
+    return acc;
+  }, {});
+
+  return Object.values(listByName).map(item => ({text: `[${item.label}:: ${item.name}] ${item.text}`}));
+}
 
 const mergeDailyNote = (directory, row) =>{
   const obsidianDailyNoteFilename = `${directory}/${row.date}.md`;
