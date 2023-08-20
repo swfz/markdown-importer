@@ -25,11 +25,11 @@ const keyMap = {
 }
 
 const richTextExtractor = (value) => {
-  return value[0]?.plain_text || "";
+  return value[0]?.plain_text || null;
 }
 
 const selectExtractor = (value) => {
-  return value?.name || "";
+  return value?.name || null;
 }
 
 const numberExtractor = (value) => {
@@ -132,8 +132,6 @@ const mergeDailyNote = (directory, row) =>{
     week: `${dayjs(row.date).year()}-W${dayjs(row.date).week().toString().padStart(2, '0')}`,
     month: `${dayjs(row.date).format("YYYY-MM")}`,
   });
-
-  console.log(frontmatter);
 
   const frontmatterAst = {
     type: "yaml",
