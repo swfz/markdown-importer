@@ -5,7 +5,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear.js';
 dayjs.extend(weekOfYear);
 
 import * as fs from "fs";
-import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst, removePositionFromAst} from "./lib/util.js";
+import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst, formatFeedbackMemo} from "./lib/util.js";
 
 // 範囲: 2021-10-27 - 2022-12-30
 
@@ -105,7 +105,7 @@ const mergeDailyNote = (directory, row) =>{
       return [createHeadingAst(key, 2)];
     }
 
-    const lines = parseString(row[key]);
+    const lines = key !== "FeedbackMemo" ? parseString(row[key]) : formatFeedbackMemo(row[key]);
 
     return [createHeadingAst(key, 2), createRecursiveListAst(lines)]
   }).flat();
