@@ -81,7 +81,7 @@ const getProperties = (page) => {
 
 const mergeDailyNote = (directory, row) =>{
   const obsidianDailyNoteFilename = `${directory}/${row.date}.md`;
-  console.log(row);
+  // console.log(row);
 
   const existMarkdown = fs.existsSync(obsidianDailyNoteFilename);
   if (!existMarkdown) {
@@ -96,7 +96,7 @@ const mergeDailyNote = (directory, row) =>{
 
   // 何かしら1つあれば1度実行したと判断
   if (ast.children.findIndex(node => node.type === "heading" && node.children[0]?.value === 'Y') !== -1){
-    console.warn("already merged");
+    console.warn(`${row.date}: already merged`);
     return;
   }
 
@@ -177,13 +177,13 @@ const main = async () => {
         {
           property: "Date",
           date: {
-            on_or_after: "2022-12-01",
+            on_or_after: "2022-07-01",
           }
         },
         {
           property: "Date",
           date: {
-            on_or_before: "2022-12-31"
+            on_or_before: "2022-08-31"
           }
         }
       ]
