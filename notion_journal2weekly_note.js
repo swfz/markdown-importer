@@ -1,13 +1,14 @@
 import { Client, LogLevel } from "@notionhq/client";
 import yaml from 'js-yaml';
 import dayjs from 'dayjs';
-import weekOfYear from 'dayjs/plugin/isoWeek.js';
+import isoWeek from 'dayjs/plugin/isoWeek.js';
 dayjs.extend(isoWeek);
 
 import * as fs from "fs";
 import { createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst } from "./lib/util.js";
 
 // NOTE: Notionにある期間はObsidianには無いので全てファイル新規作成
+// 期間: 2021-10-25 ~ 2023-01-01
 
 const keyMap = {
   "Week": "term",
@@ -53,8 +54,25 @@ const headers = [
   {value: "Private", depth: 3, contentsKey: 'try_private'},
 ]
 
+// NOTE: 2023-08-23時点の状況として、Calendarに表示されるWeekNumberが一般的なIsoWeekと比較して1つずれている
+// いつもCalendarからWeeklyNoteを作成するので間違ってはいてもCalendarが表示するWeekNumberに合わせる判断をした
+// ワンショットの実行でデータ範囲が限られているので無理やり合わせる対応を入れる
+// Ref: https://github.com/liamcain/obsidian-calendar-plugin/issues/271
 const getFilename = (date) => {
-  return `${dayjs(date).year()}-W${dayjs(date).isoWeek().toString().padStart(2, '0')}.md`
+  const y = dayjs(date).year();
+  const w = dayjs(date).isoWeek();
+
+  let week, year;
+  if (y === 2021 && w === 52) {
+    week = 1;
+    year = 2022;
+  }
+  else {
+    week = w + 1;
+    year = y;
+  }
+
+  return `${year}-W${week.toString().padStart(2, '0')}.md`
 }
 
 const getProperties = (page) => {
@@ -119,7 +137,7 @@ const divisionGuranularity = (str) => {
 }
 
 const mergeWeeklyNote = (directory, row) => {
-  const filename = `${directory}/${getFilename(row.term.end)}`;
+  const filename = `${directory}/${getFilename(row.term.start)}`;
 
   const existMarkdown = fs.existsSync(filename);
   if (!existMarkdown) {
