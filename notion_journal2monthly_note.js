@@ -2,17 +2,16 @@ import { Client, LogLevel } from "@notionhq/client";
 import dayjs from 'dayjs';
 
 import * as fs from "fs";
-import { createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst } from "./lib/util.js";
+import { parseString, createRecursiveListAst, markdownToAst, astToMarkdown, createHeadingAst } from "./lib/util.js";
 
 // NOTE: Notionにある期間はObsidianには無いので全てファイル新規作成
 // 期間: 2021-10-01 ~ 2022-12-31
 
 const keyMap = {
-  "Term": "term",
   "仕事": "仕事",
   "個人OKRの進捗": "個人OKR",
   "勉強": "勉強",
-  "月1目標": "次週Try",
+  "月1目標": "月1目標",
   "次月意識すること": "次月意識すること",
   "K": "K",
   "P": "P",
@@ -24,6 +23,8 @@ const richTextExtractor = (value) => {
 }
 
 const valueMap = {
+  term: (value) => value,
+  month: (value) => value,
   仕事: richTextExtractor,
   個人OKR: richTextExtractor,
   勉強: richTextExtractor,
@@ -62,7 +63,7 @@ const mergeMonthlyNote = (directory, row) => {
   }
   const ast = markdownToAst(filename);
 
-  const contentsAstList = [""].map(header => {
+  const contentsAstList = ["仕事", "個人OKR", "勉強", "月1目標", "次月意識すること", "K", "P", "T"].map(key => {
     if (!row[key]) {
       return [createHeadingAst(key, 2)];
     }
@@ -100,7 +101,7 @@ const main = async () => {
   pages.forEach(page => {
     const row = getProperties(page);
     console.info(`writing... ${row?.term?.start}`);
-    // mergeMonthlyNote(obsidianMonthlyNoteDir, row);
+    mergeMonthlyNote(obsidianMonthlyNoteDir, row);
   });
 };
 
