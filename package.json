@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@notionhq/client": "^2.2.10",
+    "@notionhq/client": "^5.0.0",
     "dayjs": "^1.11.9",
     "js-yaml": "^4.1.1",
     "mdast-util-from-markdown": "^2.0.0",
